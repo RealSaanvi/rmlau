@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Results</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family:'Poppins',sans-serif; background:linear-gradient(135deg,#0f1419 0%,#1a202c 50%,#2d3748 100%); color:#e5e7eb; min-height:100vh; display:flex; flex-direction:column;}
+    .card { background:linear-gradient(145deg,#1f2937 0%,#374151 100%); border:1px solid #4a5568; border-radius:1rem; }
+    .rank-1{background:linear-gradient(135deg,#4d3d0f 0%,#6e541b 100%)!important;color:#f6e05e!important;font-weight:700;border:2px solid #ffcc00;}
+    .rank-2{background:linear-gradient(135deg,#3a3b45 0%,#52535f 100%)!important;color:#e2e8f0!important;font-weight:600;border:2px solid #c0c0c0;}
+    .rank-3{background:linear-gradient(135deg,#4a3824 0%,#5c452e 100%)!important;color:#d69e2e!important;font-weight:600;border:2px solid #cd7f32;}
+    .rank-column{color:#fbbf24;font-weight:600;}.rollno-column{color:#60a5fa;font-weight:500;}.name-column{color:#34d399;font-weight:500;}.marks-column{color:#f87171;font-weight:600;}.result-column{color:#38bdf8;}
+    .loader{border-top-color:#3b82f6;animation:spin 1s linear infinite;} @keyframes spin{to{transform:rotate(360deg);}}
+    /* Responsive table */
+    .responsive-table{display:flex;flex-direction:column;}
+    .responsive-table thead{display:none;}
+    .responsive-table tbody{display:block;width:100%;}
+    .responsive-table tr{display:flex;flex-direction:column;border-bottom:1px solid #374151;margin-bottom:1rem;padding:1rem;border-radius:0.5rem;}
+    .responsive-table td{padding:0.5rem 0;display:flex;justify-content:space-between;align-items:center;}
+    .responsive-table td::before{content:attr(data-label);font-weight:600;color:#9ca3af;margin-right:1rem;}
+    @media(min-width:768px){.responsive-table{display:table;} .responsive-table thead{display:table-header-group;} .responsive-table tbody{display:table-row-group;} .responsive-table tr{display:table-row;margin:0;padding:0;} .responsive-table td{display:table-cell;padding:1rem;} .responsive-table td::before{content:none;}}
+    /* Modal */
+    .modal {display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.8);backdrop-filter:blur(5px);}
+    .modal-content {background:#1f2937;margin:15% auto;padding:30px;border:1px solid #4a5568;border-radius:1rem;width:90%;max-width:500px;}
+    .close {float:right;font-size:28px;font-weight:bold;cursor:pointer;color:#aaa;}
+    .close:hover {color:white;}
+    .share-btn{background:linear-gradient(135deg,#10b981 0%,#059669 100%);padding:0.75rem 1.5rem;border-radius:0.75rem;transition:0.3s;}
+    .share-btn:hover{background:linear-gradient(135deg,#059669 0%,#047857 100%);transform:translateY(-2px);}
+  </style>
+</head>
+<body>
+  <div class="container mx-auto p-4 md:p-8 max-w-6xl flex-grow">
+    <header class="text-center mb-8">
+      <h1 id="mainHeading" class="text-3xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Student Results</h1>
+      <p class="text-gray-400 mt-2 text-md md:text-lg">Dr. Rammanohar Lohia Avadh University, Ayodhya</p>
+      <div class="mt-4 text-sm text-gray-400">
+        <p>
+          Made By <span class="text-green-400 font-bold">RvS</span> | Website Badhiya Lagi! Follow To Banta Hai |
+          <a href="https://www.instagram.com/vaikartana_raj/" target="_blank" class="text-pink-400 hover:underline">Insta- @Vaikartana_Raj</a> |
+          <a href="https://wa.me/919838225780?text=Hello%20RvS!" target="_blank" class="text-green-400 hover:underline">WhatsApp- 9838225780</a>
+        </p>
+      </div>
+    </header>
+
+    <div class="card p-4 mb-8 flex flex-col md:flex-row gap-4 items-center">
+      <div class="relative flex-grow w-full">
+        <input type="text" id="searchInput" class="w-full bg-gray-900 border border-gray-600 rounded-lg py-3 px-5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg" placeholder="Search by Roll No or Name...">
+      </div>
+      <div id="summary" class="flex gap-6 text-sm md:text-base text-gray-300"></div>
+      <button id="shareBtn" class="share-btn text-white font-medium">Share Results</button>
+    </div>
+
+    <div id="loader" class="flex justify-center items-center h-64">
+      <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-600 h-12 w-12"></div>
+    </div>
+
+    <div id="resultsContainer" class="card overflow-hidden hidden">
+      <div class="overflow-x-auto">
+        <table class="responsive-table w-full text-sm text-left">
+          <thead class="bg-gray-800 text-gray-300 uppercase">
+            <tr>
+              <th class="px-6 py-4 rank-column">Rank</th>
+              <th class="px-6 py-4 rollno-column">Roll No</th>
+              <th class="px-6 py-4 name-column">Name</th>
+              <th class="px-6 py-4 marks-column">Marks</th>
+              <th class="px-6 py-4 result-column">Result</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p id="noResults" class="text-center text-gray-500 mt-8 hidden">No results found.</p>
+  </div>
+
+  <footer class="text-center p-4 text-xs text-gray-600 mt-auto">
+    <p>Disclaimer: Student project. Data fetched from Firebase. For official results visit university site.</p>
+  </footer>
+
+  <div id="shareModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 class="text-xl font-bold mb-4">Share Results</h2>
+      <textarea id="shareMessage" class="w-full bg-gray-800 border border-gray-600 rounded-lg p-4 text-white h-32 resize-none mb-4" readonly></textarea>
+      <div class="flex gap-4">
+        <button id="copyBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Copy</button>
+        <button id="whatsappBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAm5zfkAWm6Dq_DWBNcLv7kaBKlu7C66WU",
+      authDomain: "rmlau-rank-wise-result.firebaseapp.com",
+      projectId: "rmlau-rank-wise-result",
+      storageBucket: "rmlau-rank-wise-result.firebasestorage.app",
+      messagingSenderId: "1069341171195",
+      appId: "1:1069341171195:web:5af12e9ada7b4dac90ff5e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const rollParam = getQueryParam("roll"); // Changed from "collection" to "roll"
+      const loader = document.getElementById("loader");
+      const resultsContainer = document.getElementById("resultsContainer");
+      const resultsBody = document.getElementById("resultsBody");
+      const noResults = document.getElementById("noResults");
+      const summaryDiv = document.getElementById("summary");
+      const searchInput = document.getElementById("searchInput");
+
+      if (!rollParam) {
+        loader.classList.add("hidden");
+        noResults.classList.remove("hidden");
+        return;
+      }
+
+      try {
+        const colRef = collection(db, rollParam);
+        const snapshot = await getDocs(colRef);
+        
+        let allResults = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          allResults.push(data);
+        });
+
+        allResults.sort((a, b) => {
+            const marksA = parseFloat(a.Marks) || 0;
+            const marksB = parseFloat(b.Marks) || 0;
+            return marksB - marksA;
+        });
+
+        allResults = allResults.map((s, i) => ({...s, Rank: i + 1}));
+
+        loader.classList.add("hidden");
+        if (!allResults.length) {
+          noResults.classList.remove("hidden");
+          return;
+        }
+
+        function renderTable(data) {
+          resultsBody.innerHTML = "";
+          data.forEach(stu => {
+            const row = document.createElement("tr");
+            if (stu.Rank === 1) row.classList.add("rank-1");
+            if (stu.Rank === 2) row.classList.add("rank-2");
+            if (stu.Rank === 3) row.classList.add("rank-3");
+            row.innerHTML = `
+              <td data-label="Rank" class="px-6 py-4">${stu.Rank}</td>
+              <td data-label="Roll No" class="px-6 py-4">${stu["Roll No"]}</td>
+              <td data-label="Student Name" class="px-6 py-4">${stu["Student Name"]}</td>
+              <td data-label="Marks" class="px-6 py-4">${stu.Marks}</td>
+              <td data-label="Result" class="px-6 py-4"><a href="${stu.URL}" target="_blank" class="text-blue-400 hover:underline">View</a></td>`;
+            resultsBody.appendChild(row);
+          });
+        }
+
+        renderTable(allResults);
+        summaryDiv.innerHTML = `Total Students: ${allResults.length}`;
+        resultsContainer.classList.remove("hidden");
+
+        searchInput.addEventListener("input", e => {
+          const val = e.target.value.toLowerCase();
+          const filtered = allResults.filter(stu =>
+            (stu["Student Name"] && stu["Student Name"].toLowerCase().includes(val)) ||
+            (stu["Roll No"] && stu["Roll No"].includes(val))
+          );
+          renderTable(filtered);
+        });
+
+        const shareBtn = document.getElementById("shareBtn");
+        const shareModal = document.getElementById("shareModal");
+        const shareMessage = document.getElementById("shareMessage");
+        const copyBtn = document.getElementById("copyBtn");
+        const whatsappBtn = document.getElementById("whatsappBtn");
+        const closeModal = document.querySelector(".close");
+
+        shareBtn.addEventListener("click", () => {
+          const msg = `${document.getElementById("mainHeading").textContent}, Result Declared! Check here: ${window.location.href}`;
+          shareMessage.value = msg;
+          shareModal.style.display = "block";
+        });
+        closeModal.onclick = () => shareModal.style.display = "none";
+        window.onclick = (e) => { if (e.target === shareModal) shareModal.style.display = "none"; };
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(shareMessage.value);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => copyBtn.textContent = "Copy", 2000);
+        };
+        whatsappBtn.onclick = () => {
+          window.open(`https://wa.me/?text=${encodeURIComponent(shareMessage.value)}`, "_blank");
+        };
+
+      } catch (err) {
+        console.error("Firebase fetch error:", err);
+        loader.classList.add("hidden");
+        noResults.textContent = "An error occurred while fetching data.";
+        noResults.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
