@@ -1,144 +1,219 @@
-
-<!DOCTYPE ahtml>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streams Courses</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>UG NEP Semester Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            
+            background-size: cover;
+            background-attachment: fixed;
         }
         .container {
-            max-width: 960px;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="container mx-auto p-8 bg-white shadow-xl rounded-2xl text-center">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-8 tracking-tight">Streams Courses</h1>
-        <div class="mb-6">
-            <input type="text" id="urlInput" placeholder="Enter complete result URL..." class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="processUrl()" class="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-600 transition duration-300">
-                Get Results by URL
-            </button>
+<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
+
+    <div class="container mx-auto p-6 sm:p-10 shadow-2xl rounded-3xl max-w-4xl w-full">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-gray-800 mb-6 drop-shadow-md">
+            RMLAU Results Portal
+        </h1>
+        <p class="text-center text-gray-600 mb-8 max-w-prose mx-auto">
+            Your single-stop solution for all UG NEP semester results. Select your semester to get started.
+        </p>
+        
+        <!-- Semester Selection and Promotion -->
+        <div class="flex flex-col md:flex-row items-center justify-between mb-8 space-y-4 md:space-y-0 md:space-x-6">
+            <div class="w-full md:w-1/2">
+                <label for="semesterSelect" class="block text-gray-700 font-bold mb-2">Select Your Semester:</label>
+                <select id="semesterSelect" class="w-full p-4 border-2 border-blue-400 rounded-xl bg-white text-gray-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300">
+                    <option value="first">1st Semester</option>
+                    <option value="second">2nd Semester</option>
+                    <option value="third">3rd Semester</option>
+                    <option value="fourth">4th Semester</option>
+                    <option value="fifth">5th Semester</option>
+                    <option value="sixth">6th Semester</option>
+                </select>
+            </div>
+            
+            <a href="https://rmlau.mnopdf.com/" target="_blank" class="w-full md:w-1/2 flex items-center justify-center bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 animate-pulse-slow">
+                <span class="mr-2">📚</span> Download Previous Year Papers of RMLAU
+            </a>
         </div>
-        <hr class="my-6 border-gray-300">
-        <input type="text" id="searchInput" oninput="filterLinks()" placeholder="Search..." class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <div id="linksContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    
-            <a href="BA-BSC-BCOM+VTH+SEMESTER+-+SUPPLEMENTARY.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ba-Bsc-Bcom Vth Semester - Supplementary
-            </a>
-            
-            <a href="BBA+IIIRD+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Bba Iiird Semester
-            </a>
-            
-            <a href="BBA-BCA+IST+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Bba-Bca Ist Semester
-            </a>
-            
-            <a href="PG+NEP+-+SUPPLEMENTARY+IIIRD+SEMESTER_ROLL-2022.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep - Supplementary Iiird Semester Roll-2022
-            </a>
-            
-            <a href="PG+NEP+-+SUPPLEMENTARY+IST+SEMESTER_ROLL-2022.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep - Supplementary Ist Semester Roll-2022
-            </a>
-            
-            <a href="PG+NEP+-+SUPPLEMENTARY+IST+SEMESTER_ROLL-2023.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep - Supplementary Ist Semester Roll-2023
-            </a>
-            
-            <a href="PG+NEP+IIIRD+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep Iiird Semester
-            </a>
-            
-            <a href="PG+NEP+IST+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep Ist Semester
-            </a>
-            
-            <a href="PG+NEP+SEMESTER+4.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Pg Nep Semester 4
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IIIRD+SEMESTER_ROLL-2021.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Iiird Semester Roll-2021
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IIIRD+SEMESTER_ROLL-2022.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Iiird Semester Roll-2022
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IIND+SEMESTER_ROLL-2023.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Iind Semester Roll-2023
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IST+SEMESTER_ROLL-2021.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Ist Semester Roll-2021
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IST+SEMESTER_ROLL-2022.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Ist Semester Roll-2022
-            </a>
-            
-            <a href="UG+NEP+-+SUPPLEMENTARY+IST+SEMESTER_ROLL-2023.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep - Supplementary Ist Semester Roll-2023
-            </a>
-            
-            <a href="UG+NEP+IIIRD+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Iiird Semester
-            </a>
-            
-            <a href="UG+NEP+IIND+SEMESTER+-+SUPPLEMENTARY.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Iind Semester - Supplementary
-            </a>
-            
-            <a href="UG+NEP+IIND+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Iind Semester
-            </a>
-            
-            <a href="UG+NEP+IST+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Ist Semester
-            </a>
-            
-            <a href="UG+NEP+IVTH+SEMESTER+-+SUPPLEMENTARY.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Ivth Semester - Supplementary
-            </a>
-            
-            <a href="UG+NEP+IVTH+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Ivth Semester
-            </a>
-            
-            <a href="UG+NEP+VITH+SEMESTER+-+SUPPLEMENTARY.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Vith Semester - Supplementary
-            </a>
-            
-            <a href="UG+NEP+VITH+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Vith Semester
-            </a>
-            
-            <a href="UG+NEP+VTH+SEMESTER.html" class="link-item bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:bg-blue-700 transform hover:scale-105 transition duration-300 ease-in-out">
-                Ug Nep Vth Semester
-            </a>
-            
+
+        <!-- Courses Table -->
+        <div class="overflow-x-auto relative shadow-xl rounded-2xl">
+            <table class="w-full text-sm text-left text-gray-600">
+                <thead class="text-xs text-gray-800 uppercase bg-blue-100 border-b-2 border-blue-200">
+                    <tr>
+                        <th scope="col" class="py-4 px-6">S.NO.</th>
+                        <th scope="col" class="py-4 px-6">Courses</th>
+                        <th scope="col" class="py-4 px-6">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Table rows populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="mt-10 text-center text-gray-700">
+            <p class="text-lg font-medium mb-4">
+                For any confusion or problems, contact me:
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <a href="https://wa.me/919838225780" target="_blank" class="flex items-center bg-green-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.04 2c-5.46 0-9.92 4.46-9.92 9.96 0 1.77.47 3.45 1.35 4.95L2 22l5.24-1.39a11.832 11.832 0 004.8-1.04c5.49 0 9.96-4.46 9.96-9.96C22 6.46 17.53 2 12.04 2zm3.84 14.35a.8.8 0 01-.54.32c-.59.16-3.4.9-3.95 1.05-.18.06-.39.09-.6.09-.43 0-.82-.12-1.14-.37-.28-.21-.61-.59-.83-.89-.22-.3-.66-.99-.66-2.61a3.682 3.682 0 01.37-1.5c.29-.5.62-.89.92-1.2.3-.31.62-.57.9-.76.28-.2.53-.32.65-.32.12 0 .28-.01.44-.01.35 0 .7.13.9.33.2.2.49.56.7.83.2.28.32.6.43.76.1.16.2.31.29.41a.8.8 0 00.5.38c.15.06.32.06.47.01.21-.06.74-.29 1.4-.64.65-.34 1.09-.6 1.3-.72.22-.11.4-.23.57-.3.17-.07.38-.11.59-.11.21 0 .4.06.59.15.19.09.43.2.66.43.23.23.4.52.5.76.1.25.16.48.16.7 0 .21-.06.4-.15.59-.1.19-.24.4-.4.59-.17.18-.32.32-.47.41a.8.8 0 01-.6.18z"/>
+                    </svg>
+                    WhatsApp 9838225780
+                </a>
+                <a href="https://www.instagram.com/vaikartana_raj" target="_blank" class="flex items-center bg-pink-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07c3.279.172 4.673 1.637 4.846 4.85.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.173 3.213-1.567 4.646-4.846 4.846-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-3.279-.173-4.673-1.637-4.846-4.85-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.173-3.213 1.567-4.646 4.846-4.846C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.704 0 8.334.01 7.005.068 3.442.247.98 2.79.799 6.354.74 7.684.73 8.054.73 12s.01 4.316.068 5.646c.18 3.563 2.723 6.096 6.297 6.277 1.33.058 1.7.068 5.006.068s4.316-.01 5.646-.068c3.563-.18 6.126-2.713 6.307-6.277.058-1.33.068-1.7.068-5.006s-.01-4.316-.068-5.646C23.277 2.79 20.714.247 17.151.066 15.821.01 15.451 0 12 0zm0 4.295a7.705 7.705 0 100 15.41 7.705 7.705 0 000-15.41zm0 2.5a5.205 5.205 0 110 10.41 5.205 5.205 0 010-10.41zm6.205-.724a1.815 1.815 0 110 3.63 1.815 1.815 0 010-3.63z"/>
+                    </svg>
+                    Instagram @Vaikartana_Raj
+                </a>
+            </div>
         </div>
     </div>
+
+    <!-- Modal for Roll No. Input -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Enter Student Roll No.</h2>
+            <p id="validationMessage" class="text-sm text-red-600 mb-2"></p>
+            <input type="text" id="rollNoInput" class="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" placeholder="e.g., 23040100410075">
+            <button onclick="validateAndRedirect()" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300">
+                SHOW RESULTS
+            </button>
+            <button onclick="closeModal()" class="w-full bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl hover:bg-gray-500 transition duration-300 mt-2">
+                Cancel
+            </button>
+        </div>
+    </div>
+
     <script>
-        function filterLinks() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const links = document.getElementsByClassName('link-item');
-            for (let i = 0; i < links.length; i++) {
-                const text = links[i].textContent || links[i].innerText;
-                if (text.toLowerCase().indexOf(filter) > -1) {
-                    links[i].style.display = "";
-                } else {
-                    links[i].style.display = "none";
-                }
+        const semesterLinks = {
+            'first': 'UG_NEPI',
+            'second': 'UG_NEPII',
+            'third': 'UG_NEPIII',
+            'fourth': 'UG_NEPIV',
+            'fifth': 'UG_NEPV',
+            'sixth': 'UG_NEPVITH'
+        };
+
+        const courses = {
+            'first': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.COM.)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ09NLik=' },
+                { name: 'BACHELOR OF SCIENCE (B.SC.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TQy4p' }
+            ],
+            'second': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.Com.)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ29tLik=' },
+                { name: 'BACHELOR OF SCIENCE (B.Sc.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TYy4p' }
+            ],
+            'third': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.COM)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ09NKQ==' },
+                { name: 'BACHELOR OF SCIENCE (B.SC.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TQy4p' }
+            ],
+            'fourth': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.Com.)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ29tLik=' },
+                { name: 'BACHELOR OF SCIENCE (B.Sc.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TYy4p' }
+            ],
+            'fifth': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.Com.)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ29tLik=' },
+                { name: 'BACHELOR OF SCIENCE (B.Sc.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TYy4p' }
+            ],
+            'sixth': [
+                { name: 'BACHELOR OF ARTS (B.A.)', id: 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=' },
+                { name: 'BACHELOR OF COMMERCE (B.Com.)', id: 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ29tLik=' },
+                { name: 'BACHELOR OF SCIENCE (B.Sc.)', id: 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TYy4p' }
+            ]
+        };
+
+        let currentClassId = '';
+        const modal = document.getElementById('resultModal');
+        const rollNoInput = document.getElementById('rollNoInput');
+        const validationMessage = document.getElementById('validationMessage');
+        const semesterSelect = document.getElementById('semesterSelect');
+        const tableBody = document.getElementById('tableBody');
+
+        function renderTable(semester) {
+            tableBody.innerHTML = '';
+            const semesterCourses = courses[semester];
+            if (semesterCourses) {
+                semesterCourses.forEach((course, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b hover:bg-gray-50 transition duration-150 ease-in-out';
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${index + 1}</td>
+                        <td class="py-4 px-6 course-name font-semibold">${course.name}</td>
+                        <td class="py-4 px-6">
+                            <button onclick="showResultModal('${course.id}')" class="bg-green-600 text-white font-bold py-2 px-4 rounded-xl shadow-md hover:bg-green-700 transition duration-300 transform hover:scale-105">
+                                GET RESULT
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        function showResultModal(id) {
+            currentClassId = id;
+            modal.style.display = "flex";
+            rollNoInput.value = '';
+            validationMessage.textContent = '';
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
             }
         }
 
@@ -146,36 +221,52 @@
             return btoa(str);
         }
 
-        function processUrl() {
-            let urlInput = document.getElementById('urlInput').value;
+        function validateAndRedirect() {
+            const rollNo = rollNoInput.value;
+            const currentSemester = semesterSelect.value;
+            validationMessage.textContent = '';
 
-            // FIX: Decode the URL first to handle pre-existing encoding from a browser copy/paste
-            try {
-                urlInput = decodeURIComponent(urlInput);
-            } catch (e) {
-                alert('Invalid URL format.');
+            // Validation logic
+            const rollNoPrefix = rollNo.substring(0, 2);
+            if (!/^\d{14}$/.test(rollNo) || !['22', '23', '24'].includes(rollNoPrefix)) {
+                validationMessage.textContent = "Roll No. must be a 14-digit number starting with '22', '23', or '24'.";
                 return;
             }
 
-            const rollNoRegex = /(Roll_no=)([^&]+)/;
-            const match = urlInput.match(rollNoRegex);
+            // Constructing the URL based on the provided logic
+            const rollNoBase = rollNo.slice(0, 12) + '01';
+            const rollNoBaseEncoded = base64Encode(rollNoBase);
 
-            let modifiedUrl = urlInput;
-            if (match) {
-                // Now match[2] will be the raw Base64 string, not encoded
-                const rollNoValue = atob(match[2]); 
-                const modifiedRollNo = rollNoValue.slice(0, -4) + '0001';
-                const encodedModifiedRollNo = base64Encode(modifiedRollNo);
-                modifiedUrl = urlInput.replace(match[0], `Roll_no=${encodedModifiedRollNo}`);
+            let encodedPart = '';
+            const sixthDigit = rollNo.charAt(6);
+            if (sixthDigit === '0') {
+                const partToEncode = rollNo.substring(7, 10);
+                encodedPart = base64Encode(partToEncode);
             } else {
-                alert('Invalid URL format. Could not find Roll_no parameter.');
-                return;
+                const partToEncode = rollNo.substring(6, 10);
+                encodedPart = base64Encode(partToEncode);
             }
+
+            const semesterUrlPart = semesterLinks[currentSemester];
             
-            // Perform a single, final encoding on the corrected URL
-            const encodedFinalUrl = encodeURIComponent(modifiedUrl);
+            // Construct the final URL and correctly encode it
+            const finalUrl = `https://result25.rmlauexams.in/Marks_Sheet/${semesterUrlPart}/print.aspx?Roll_no=${rollNoBaseEncoded}&Col=${encodedPart}&Class=${currentClassId}`;
+            const encodedFinalUrl = encodeURIComponent(finalUrl);
+
+            // Open the new page with the correctly encoded URL
             window.open(`https://realsaanvi.github.io/rmlau/Pages/getdata.html?url=${encodedFinalUrl}`, '_blank');
+            closeModal();
         }
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable(semesterSelect.value);
+        });
+
+        // Event listener for semester selection change
+        semesterSelect.addEventListener('change', (event) => {
+            renderTable(event.target.value);
+        });
     </script>
 </body>
 </html>
