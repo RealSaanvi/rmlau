@@ -35,7 +35,7 @@
   <div class="container mx-auto p-4 md:p-8 max-w-6xl flex-grow">
     <header class="text-center mb-8">
       <h1 id="mainHeading" class="text-3xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Student Results</h1>
-      <p class="text-gray-400 mt-2 text-md md:text-lg">Dr. Rammanohar Lohia Avadh University, Ayodhya</p>
+      <p id="collegeName" class="text-gray-400 mt-2 text-md md:text-lg">Dr. Rammanohar Lohia Avadh University, Ayodhya</p>
       <div class="mt-4 text-sm text-gray-400">
         <p>
           Made By <span class="text-green-400 font-bold">RvS</span> | Website Badhiya Lagi! Follow To Banta Hai |
@@ -95,7 +95,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAm5zfkAWm6Dq_DWBNcLv7kaBKlu7C66WU",
@@ -114,18 +114,85 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      const rollParam = getQueryParam("roll"); // Changed from "collection" to "roll"
+      const rollParam = getQueryParam("roll");
       const loader = document.getElementById("loader");
       const resultsContainer = document.getElementById("resultsContainer");
       const resultsBody = document.getElementById("resultsBody");
       const noResults = document.getElementById("noResults");
       const summaryDiv = document.getElementById("summary");
       const searchInput = document.getElementById("searchInput");
+      const mainHeading = document.getElementById("mainHeading");
+      const collegeNameEl = document.getElementById("collegeName");
 
-      if (!rollParam) {
+      if (!rollParam || rollParam.length < 14) {
         loader.classList.add("hidden");
         noResults.classList.remove("hidden");
+        noResults.textContent = "Invalid roll number.";
         return;
+      }
+
+      // Logic to get course and semester from roll number
+      const courseCode = rollParam.charAt(3);
+      const semesterCode = rollParam.charAt(13);
+
+      let courseTitle = "";
+      switch (courseCode) {
+        case '1':
+          courseTitle = "BACHELOR OF ARTS (B.A.)";
+          break;
+        case '2':
+          courseTitle = "BACHELOR OF COMMERCE (B.COM.)";
+          break;
+        case '4':
+          courseTitle = "BACHELOR OF SCIENCE (B.SC.)";
+          break;
+        default:
+          courseTitle = "";
+      }
+
+      let semesterTitle = "";
+      switch (semesterCode) {
+        case '1':
+          semesterTitle = "1ST SEM";
+          break;
+        case '2':
+          semesterTitle = "2ND SEM";
+          break;
+        case '3':
+          semesterTitle = "3RD SEM";
+          break;
+        case '4':
+          semesterTitle = "4TH SEM";
+          break;
+        case '5':
+          semesterTitle = "5TH SEM";
+          break;
+        case '6':
+          semesterTitle = "6TH SEM";
+          break;
+        default:
+          semesterTitle = "";
+      }
+      
+      if (courseTitle && semesterTitle) {
+        mainHeading.textContent = `${courseTitle} ${semesterTitle} STUDENT RESULTS`;
+      } else {
+        mainHeading.textContent = "Student Results";
+      }
+
+      // Logic to get college name from Firebase
+      const collegeCode = rollParam.substring(6, 10);
+      try {
+        const collegeDocRef = doc(db, "colleges", collegeCode);
+        const collegeDocSnap = await getDoc(collegeDocRef);
+        if (collegeDocSnap.exists()) {
+          const collegeData = collegeDocSnap.data();
+          if (collegeData.name) {
+            collegeNameEl.textContent = collegeData.name;
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching college name:", err);
       }
 
       try {
@@ -190,7 +257,7 @@
         const closeModal = document.querySelector(".close");
 
         shareBtn.addEventListener("click", () => {
-          const msg = `${document.getElementById("mainHeading").textContent}, Result Declared! Check here: ${window.location.href}`;
+          const msg = `${mainHeading.textContent}, Result Declared! Check here: ${window.location.href}`;
           shareMessage.value = msg;
           shareModal.style.display = "block";
         });
