@@ -31,10 +31,32 @@
     .share-btn:hover{background:linear-gradient(135deg,#059669 0%,#047857 100%);transform:translateY(-2px);}
     .action-btn { background:linear-gradient(135deg,#5a67d8 0%,#434190 100%); padding:0.5rem 1rem; border-radius:0.5rem; transition:0.3s; }
     .action-btn:hover { transform:translateY(-2px); }
+    /* New styles for the PCT column */
+    .pct-column { color:#f87171; font-weight:600; }
+    .pct-col-cell { display: none; }
+    /* Initial overlay */
+    #overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 50;
+    }
   </style>
 </head>
 <body>
-  <div class="container mx-auto p-4 md:p-8 max-w-6xl flex-grow">
+  
+  <div id="overlay" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex flex-col justify-center items-center z-50">
+    <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-6 animate-bounce">Ready to see the results?</h1>
+    <button id="seeResultBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-xl transition-transform duration-300 hover:scale-105">
+      SEE RESULT
+    </button>
+  </div>
+  
+  <div id="mainContent" class="container mx-auto p-4 md:p-8 max-w-6xl flex-grow hidden">
     <header class="text-center mb-8">
       <p id="collegeName" class="text-gray-400 mt-2 text-md md:text-lg"></p>
       <h2 id="mainHeading" class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Student Results</h2>
@@ -77,6 +99,7 @@
               <th class="px-6 py-4 rank-column">Rank</th>
               <th class="px-6 py-4 rollno-column">Roll No</th>
               <th class="px-6 py-4 name-column">Name</th>
+              <th class="px-6 py-4 marks-column pct-column">PCT</th>
               <th class="px-6 py-4 marks-column">Marks</th>
               <th class="px-6 py-4 result-column">Result</th>
             </tr>
@@ -104,6 +127,8 @@
       </div>
     </div>
   </div>
+  
+  <audio id="backgroundMusic" preload="auto"></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -125,7 +150,37 @@
       return new URLSearchParams(window.location.search).get(name);
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    const seeResultBtn = document.getElementById("seeResultBtn");
+    const mainContent = document.getElementById("mainContent");
+    const overlay = document.getElementById("overlay");
+    const backgroundMusic = document.getElementById("backgroundMusic");
+    const songs = [
+      "https://audio.jukehost.co.uk/dSuI2JK4PrsfsTgPz9sBWWxRlxK6GyCx",
+      "https://audio.jukehost.co.uk/MhPalWbnMBGv2eqcva77n2mrEqR3iyqH",
+      "https://audio.jukehost.co.uk/1rc7tH757PFXa0FqNt2Bl6yGD0l584sJ",
+      "https://audio.jukehost.co.uk/MYlsWd7K9eLSr3KeZTTfoxiQ6uLS6wmX"
+    ];
+
+    seeResultBtn.addEventListener("click", () => {
+      // Show the main content first
+      mainContent.classList.remove("hidden");
+      
+      // Play a random song only once
+      const randomSong = songs[Math.floor(Math.random() * songs.length)];
+      backgroundMusic.src = randomSong;
+      backgroundMusic.play().catch(error => {
+        console.log("Audio playback failed:", error);
+      });
+      
+      // Hide the overlay and then remove it completely from the page
+      overlay.style.display = 'none';
+      overlay.remove(); // This line ensures it's completely gone from the DOM
+      
+      // Load the results after the button is clicked
+      loadResults();
+    });
+
+    async function loadResults() {
       const rollParam = getQueryParam("roll");
       const loader = document.getElementById("loader");
       const resultsContainer = document.getElementById("resultsContainer");
@@ -135,6 +190,7 @@
       const searchInput = document.getElementById("searchInput");
       const mainHeading = document.getElementById("mainHeading");
       const collegeNameEl = document.getElementById("collegeName");
+      const pctColumnHeader = document.querySelector('.pct-column');
 
       if (!rollParam || rollParam.length < 14) {
         loader.classList.add("hidden");
@@ -143,7 +199,6 @@
         return;
       }
 
-      // Logic to get course and semester from roll number
       const courseCode = rollParam.charAt(3);
       const semesterCode = rollParam.charAt(13);
 
@@ -192,7 +247,6 @@
         mainHeading.textContent = "Student Results";
       }
 
-      // Logic to get college name from Firebase
       const collegeCode = rollParam.substring(6, 10);
       try {
         const collegeDocRef = doc(db, "colleges", collegeCode);
@@ -217,10 +271,20 @@
           allResults.push(data);
         });
 
+        const allHavePCT = allResults.every(s => s.PCT && s.PCT !== "N/A" && !isNaN(parseFloat(s.PCT)));
+        let sortKey = 'Marks';
+        
+        if (allHavePCT) {
+          sortKey = 'PCT';
+          pctColumnHeader.classList.remove('hidden');
+        } else {
+          pctColumnHeader.classList.add('hidden');
+        }
+        
         allResults.sort((a, b) => {
-            const marksA = parseFloat(a.Marks) || 0;
-            const marksB = parseFloat(b.Marks) || 0;
-            return marksB - marksA;
+            const valA = parseFloat(a[sortKey]) || 0;
+            const valB = parseFloat(b[sortKey]) || 0;
+            return valB - valA;
         });
 
         allResults = allResults.map((s, i) => ({...s, Rank: i + 1}));
@@ -238,10 +302,17 @@
             if (stu.Rank === 1) row.classList.add("rank-1");
             if (stu.Rank === 2) row.classList.add("rank-2");
             if (stu.Rank === 3) row.classList.add("rank-3");
+            
+            let pctCell = '';
+            if (allHavePCT) {
+              pctCell = `<td data-label="PCT" class="px-6 py-4">${stu.PCT}</td>`;
+            }
+
             row.innerHTML = `
               <td data-label="Rank" class="px-6 py-4">${stu.Rank}</td>
               <td data-label="Roll No" class="px-6 py-4">${stu["Roll No"]}</td>
               <td data-label="Student Name" class="px-6 py-4">${stu["Student Name"]}</td>
+              ${pctCell}
               <td data-label="Marks" class="px-6 py-4">${stu.Marks}</td>
               <td data-label="Result" class="px-6 py-4"><a href="${stu.URL}" target="_blank" class="text-blue-400 hover:underline">View</a></td>`;
             resultsBody.appendChild(row);
@@ -292,7 +363,7 @@
         noResults.textContent = "An error occurred while fetching data.";
         noResults.classList.remove("hidden");
       }
-    });
+    }
   </script>
 </body>
 </html>
