@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UG NEP Semester Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -35,8 +37,10 @@
             border-radius: 1.5rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             width: 90%;
-            max-width: 400px;
+            max-width: 500px;
             text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .animate-pulse-slow {
             animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -44,6 +48,24 @@
         @keyframes pulse-slow {
             0%, 100% { opacity: 1; }
             50% { opacity: .7; }
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: linear-gradient(to right, #3B82F6, #1D4ED8);
+            color: white;
+        }
+        .college-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .college-item:hover {
+            background-color: #F3F4F6;
+        }
+        .college-item.selected {
+            background-color: #3B82F6;
+            color: white;
         }
     </style>
 </head>
@@ -112,10 +134,36 @@
 
     <div id="resultModal" class="modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800">Enter Student Roll No.</h2>
-            <p id="validationMessage" class="text-sm text-red-600 mb-2"></p>
-            <input type="text" id="rollNoInput" class="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" placeholder="e.g., 23040100410075">
-            <button onclick="validateAndRedirect()" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Get Your Result</h2>
+            
+            <!-- Tab buttons -->
+            <div class="flex mb-4 bg-gray-200 rounded-lg p-1">
+                <button id="rollNoTab" class="tab-button flex-1 py-2 px-4 rounded-md font-semibold active">
+                    Enter Roll No.
+                </button>
+                <button id="collegeTab" class="tab-button flex-1 py-2 px-4 rounded-md font-semibold">
+                    Select College
+                </button>
+            </div>
+            
+            <!-- Roll Number Input Tab -->
+            <div id="rollNoContent" class="tab-content">
+                <p id="validationMessage" class="text-sm text-red-600 mb-2"></p>
+                <input type="text" id="rollNoInput" class="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" placeholder="e.g., 23040100410075">
+            </div>
+            
+            <!-- College Selection Tab -->
+            <div id="collegeContent" class="tab-content" style="display: none;">
+                <p id="collegeValidationMessage" class="text-sm text-red-600 mb-2"></p>
+                <input type="text" id="collegeSearch" class="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300" placeholder="Search by college name or code...">
+                <div id="collegeList" class="max-h-48 overflow-y-auto border rounded-lg">
+                    <div class="p-4 text-center text-gray-500">Loading colleges...</div>
+                </div>
+                <input type="hidden" id="selectedCollegeCode">
+                <p id="selectedCollegeDisplay" class="text-sm text-blue-600 mt-2"></p>
+            </div>
+            
+            <button onclick="validateAndRedirect()" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition duration-300 mt-4">
                 SHOW RESULTS
             </button>
             <button onclick="closeModal()" class="w-full bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl hover:bg-gray-500 transition duration-300 mt-2">
@@ -125,6 +173,20 @@
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm5zfkAWm6Dq_DWBNcLv7kaBKlu7C66WU",
+            authDomain: "rmlau-rank-wise-result.firebaseapp.com",
+            projectId: "rmlau-rank-wise-result",
+            storageBucket: "rmlau-rank-wise-result.firebasestorage.app",
+            messagingSenderId: "1069341171195",
+            appId: "1:1069341171195:web:5af12e9ada7b4dac90ff5e"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const semesterLinks = {
             'first': 'UG_NEPI',
             'second': 'UG_NEPII',
@@ -168,11 +230,95 @@
         };
 
         let currentClassId = '';
+        let allColleges = [];
+        let selectedCollegeCode = '';
         const modal = document.getElementById('resultModal');
         const rollNoInput = document.getElementById('rollNoInput');
         const validationMessage = document.getElementById('validationMessage');
+        const collegeValidationMessage = document.getElementById('collegeValidationMessage');
         const semesterSelect = document.getElementById('semesterSelect');
         const tableBody = document.getElementById('tableBody');
+        const collegeSearch = document.getElementById('collegeSearch');
+        const collegeList = document.getElementById('collegeList');
+        const selectedCollegeDisplay = document.getElementById('selectedCollegeDisplay');
+
+        // Tab functionality
+        const rollNoTab = document.getElementById('rollNoTab');
+        const collegeTab = document.getElementById('collegeTab');
+        const rollNoContent = document.getElementById('rollNoContent');
+        const collegeContent = document.getElementById('collegeContent');
+
+        rollNoTab.addEventListener('click', () => {
+            rollNoTab.classList.add('active');
+            collegeTab.classList.remove('active');
+            rollNoContent.style.display = 'block';
+            collegeContent.style.display = 'none';
+        });
+
+        collegeTab.addEventListener('click', () => {
+            collegeTab.classList.add('active');
+            rollNoTab.classList.remove('active');
+            rollNoContent.style.display = 'none';
+            collegeContent.style.display = 'block';
+        });
+
+        // Load colleges from Firebase
+        async function loadColleges() {
+            try {
+                const snapshot = await db.collection('colleges').get();
+                allColleges = [];
+                snapshot.forEach(doc => {
+                    allColleges.push({
+                        code: doc.id,
+                        name: doc.data().name
+                    });
+                });
+                allColleges.sort((a, b) => a.name.localeCompare(b.name));
+                displayColleges(allColleges);
+            } catch (error) {
+                console.error('Error loading colleges:', error);
+                collegeList.innerHTML = '<div class="p-4 text-center text-red-500">Error loading colleges</div>';
+            }
+        }
+
+        function displayColleges(colleges) {
+            if (colleges.length === 0) {
+                collegeList.innerHTML = '<div class="p-4 text-center text-gray-500">No colleges found</div>';
+                return;
+            }
+
+            collegeList.innerHTML = colleges.map(college => 
+                `<div class="college-item p-3 border-b hover:bg-gray-50 cursor-pointer" 
+                      onclick="selectCollege('${college.code}', '${college.name.replace(/'/g, "\\'")}')">
+                    <div class="font-semibold">${college.name}</div>
+                    <div class="text-sm text-gray-500">Code: ${college.code}</div>
+                </div>`
+            ).join('');
+        }
+
+        function selectCollege(code, name) {
+            selectedCollegeCode = code;
+            document.getElementById('selectedCollegeCode').value = code;
+            selectedCollegeDisplay.textContent = `Selected: ${name} (${code})`;
+            
+            // Update visual selection
+            document.querySelectorAll('.college-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            collegeValidationMessage.textContent = '';
+        }
+
+        // College search functionality
+        collegeSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredColleges = allColleges.filter(college => 
+                college.name.toLowerCase().includes(searchTerm) || 
+                college.code.toLowerCase().includes(searchTerm)
+            );
+            displayColleges(filteredColleges);
+        });
 
         function renderTable(semester) {
             tableBody.innerHTML = '';
@@ -199,7 +345,22 @@
             currentClassId = id;
             modal.style.display = "flex";
             rollNoInput.value = '';
+            selectedCollegeCode = '';
+            document.getElementById('selectedCollegeCode').value = '';
+            selectedCollegeDisplay.textContent = '';
             validationMessage.textContent = '';
+            collegeValidationMessage.textContent = '';
+            collegeSearch.value = '';
+            
+            // Reset to first tab
+            rollNoTab.click();
+            
+            // Load colleges if not already loaded
+            if (allColleges.length === 0) {
+                loadColleges();
+            } else {
+                displayColleges(allColleges);
+            }
         }
 
         function closeModal() {
@@ -216,19 +377,76 @@
             return btoa(str);
         }
 
-        function validateAndRedirect() {
-            const rollNo = rollNoInput.value;
-            const currentSemester = semesterSelect.value;
-            validationMessage.textContent = '';
+        function getSemesterPrefix(semester) {
+            if (semester === 'first' || semester === 'second') return '24';
+            if (semester === 'third' || semester === 'fourth') return '23';
+            if (semester === 'fifth' || semester === 'sixth') return '22';
+            return '24';
+        }
 
-            // Validation logic
-            const rollNoPrefix = rollNo.substring(0, 2);
-            if (!/^\d{14}$/.test(rollNo) || !['22', '23', '24'].includes(rollNoPrefix)) {
-                validationMessage.textContent = "Roll No. must be a 14-digit number starting with '22', '23', or '24'.";
-                return;
+        function getCourseValue(classId) {
+            if (classId === 'QkFDSEVMT1IgT0YgQVJUUyAoQi5BLik=') return '1';
+            if (['QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ09NLik=', 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ29tLik=', 'QkFDSEVMT1IgT0YgQ09NTUVSQ0UgKEIuQ09NKQ=='].includes(classId)) return '2';
+            if (['QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TQy4p', 'QkFDSEVMT1IgT0YgU0NJRU5DRSAoQi5TYy4p'].includes(classId)) return '4';
+            return '1';
+        }
+
+        function validateAndRedirect() {
+            const currentSemester = semesterSelect.value;
+            const isRollNoTab = rollNoTab.classList.contains('active');
+            validationMessage.textContent = '';
+            collegeValidationMessage.textContent = '';
+
+            let rollNo = '';
+
+            if (isRollNoTab) {
+                // Roll number input validation
+                rollNo = rollNoInput.value;
+                
+                if (!rollNo) {
+                    validationMessage.textContent = "Please enter a roll number.";
+                    return;
+                }
+
+                const expectedPrefix = getSemesterPrefix(currentSemester);
+                const rollNoPrefix = rollNo.substring(0, 2);
+                
+                if (!/^\d{14}$/.test(rollNo)) {
+                    validationMessage.textContent = "Roll No. must be a 14-digit number.";
+                    return;
+                }
+                
+                if (rollNoPrefix !== expectedPrefix) {
+                    validationMessage.textContent = `Roll No. must start with '${expectedPrefix}' for the selected semester.`;
+                    return;
+                }
+            } else {
+                // College selection validation
+                if (!selectedCollegeCode) {
+                    collegeValidationMessage.textContent = "Please select a college.";
+                    return;
+                }
+
+                // Generate roll number based on selections
+                const semesterPrefix = getSemesterPrefix(currentSemester);
+                const courseValue = getCourseValue(currentClassId);
+                const collegeCode = selectedCollegeCode.padStart(4, '0');
+                
+                const semesterSuffixes = {
+                    'first': '01',
+                    'second': '02',
+                    'third': '03',
+                    'fourth': '04',
+                    'fifth': '05',
+                    'sixth': '06'
+                };
+                const semesterSuffix = semesterSuffixes[currentSemester];
+                
+                // Format: [prefix][0][courseValue][01][collegeCode][00][semesterSuffix]
+                rollNo = `${semesterPrefix}0${courseValue}01${collegeCode}00${semesterSuffix}`;
             }
 
-            // Determine the semester suffix based on the selected semester
+            // Proceed with existing logic for URL generation
             const semesterSuffixes = {
                 'first': '01',
                 'second': '02',
