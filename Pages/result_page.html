@@ -45,6 +45,17 @@
         align-items: center;
         z-index: 50;
     }
+    /* Creator name styling */
+    .creator-name {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      background: linear-gradient(to right, #f59e0b, #d97706, #92400e);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
   </style>
 </head>
 <body>
@@ -60,6 +71,7 @@
     <header class="text-center mb-8">
       <p id="collegeName" class="text-gray-400 mt-2 text-md md:text-lg"></p>
       <h2 id="mainHeading" class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">Student Results</h2>
+      <p id="creatorName" class="creator-name hidden"></p>
       <div class="mt-4 text-sm text-gray-400">
         <p>
           Made By <span class="text-green-400 font-bold">RvS</span> | Website Badhiya Lagi! Follow To Banta Hai |
@@ -120,6 +132,10 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2 class="text-xl font-bold mb-4">Share Results</h2>
+      <div class="mb-4">
+        <label for="creatorNameInput" class="block text-sm font-medium text-gray-300 mb-2">Your Name (Optional)</label>
+        <input type="text" id="creatorNameInput" class="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your name">
+      </div>
       <textarea id="shareMessage" class="w-full bg-gray-800 border border-gray-600 rounded-lg p-4 text-white h-32 resize-none mb-4" readonly></textarea>
       <div class="flex gap-4">
         <button id="copyBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Copy</button>
@@ -161,13 +177,38 @@
       "https://audio.jukehost.co.uk/MYlsWd7K9eLSr3KeZTTfoxiQ6uLS6wmX"
     ];
 
+    // Check for creator parameter and display creator name
+    const creatorParam = getQueryParam("creator");
+    const creatorNameEl = document.getElementById("creatorName");
+    if (creatorParam) {
+      creatorNameEl.textContent = `By ${decodeURIComponent(creatorParam)}`;
+      creatorNameEl.classList.remove("hidden");
+    }
+
     seeResultBtn.addEventListener("click", () => {
       // Show the main content first
       mainContent.classList.remove("hidden");
       
-      // Play a random song only once
-      const randomSong = songs[Math.floor(Math.random() * songs.length)];
-      backgroundMusic.src = randomSong;
+      // Get roll parameter to determine course
+      const rollParam = getQueryParam("roll");
+      let songToPlay;
+      
+      if (rollParam && rollParam.length >= 14) {
+        const courseCode = rollParam.charAt(3);
+        
+        // Play special song for B.A. (course code '1')
+        if (courseCode === '1') {
+          songToPlay = "https://audio.jukehost.co.uk/Kk3zWxxUy1k1MA0iuxb3DYEAg6EjHV19";
+        } else {
+          // Play random song for other courses
+          songToPlay = songs[Math.floor(Math.random() * songs.length)];
+        }
+      } else {
+        // Default to random song if no valid roll parameter
+        songToPlay = songs[Math.floor(Math.random() * songs.length)];
+      }
+      
+      backgroundMusic.src = songToPlay;
       backgroundMusic.play().catch(error => {
         console.log("Audio playback failed:", error);
       });
@@ -335,17 +376,38 @@
         const shareBtn = document.getElementById("shareBtn");
         const shareModal = document.getElementById("shareModal");
         const shareMessage = document.getElementById("shareMessage");
+        const creatorNameInput = document.getElementById("creatorNameInput");
         const copyBtn = document.getElementById("copyBtn");
         const whatsappBtn = document.getElementById("whatsappBtn");
         const closeModal = document.querySelector(".close");
 
-        shareBtn.addEventListener("click", () => {
+        function updateShareMessage() {
           const collegeName = collegeNameEl.textContent;
           const headingText = mainHeading.textContent;
-          const msg = `${collegeName}\n\n${headingText}, Rank wise Result Declared! Check here: ${window.location.href}`;
+          const currentUrl = new URL(window.location);
+          
+          // Get creator name from input
+          const creatorName = creatorNameInput.value.trim();
+          
+          // Update URL with creator parameter if name is provided
+          if (creatorName) {
+            currentUrl.searchParams.set('creator', encodeURIComponent(creatorName));
+          } else {
+            currentUrl.searchParams.delete('creator');
+          }
+          
+          const msg = `${collegeName}\n\n${headingText}, Rank wise Result Declared! Check here: ${currentUrl.href}`;
           shareMessage.value = msg;
+        }
+
+        shareBtn.addEventListener("click", () => {
+          updateShareMessage();
           shareModal.style.display = "block";
         });
+
+        // Update share message when creator name input changes
+        creatorNameInput.addEventListener("input", updateShareMessage);
+
         closeModal.onclick = () => shareModal.style.display = "none";
         window.onclick = (e) => { if (e.target === shareModal) shareModal.style.display = "none"; };
         copyBtn.onclick = () => {
